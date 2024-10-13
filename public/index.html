@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Watch Party - Video.js Player</title>
+
+  <!-- Video.js CSS -->
+  <link href="https://vjs.zencdn.net/8.0.4/video-js.css" rel="stylesheet" />
+
+  <!-- Video.js JS -->
+  <script src="https://vjs.zencdn.net/8.0.4/video.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #282c34;
+      margin: 0;
+    }
+    .video-js {
+      width: 80%;
+      max-width: 800px;
+      margin-bottom: 10px;
+    }
+    input {
+      width: 70%;
+      max-width: 700px;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      background-color: #61dafb;
+      color: black;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    button:hover {
+      background-color: #21a1f1;
+    }
+  </style>
+</head>
+<body>
+  <input type="text" id="urlInput" placeholder="Enter video URL (mp4, webm, etc.)" />
+  <button id="updateUrlBtn">Update Video URL</button>
+
+  <video id="videoPlayer" class="video-js vjs-default-skin" controls preload="auto" data-setup="{}">
+    <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4" />
+    Your browser does not support HTML5 video.
+  </video>
+
+  <script>
+    const socket = io();
+    const videoPlayer = videojs('videoPlayer');
+    const urlInput = document.getElementById('urlInput');
+    const updateUrlBtn = document.getElementById('updateUrlBtn');
+    let isRemoteAction = false;
+
+    // Helper function to get the video type from the URL extension
+    function getVideoType(url) {
+      const extension = url.split('.').pop();
+      const types = {
+        mp4: 'video/mp4',
+        webm: 'video/webm',
+        ogg: 'video/ogg',
+      };
+      return types[extension] || 'video/mp4'; // Default to mp4
+    }
+
+    // Update video URL on button click
+    updateUrlBtn.addEventListener('click', () => {
+      const newUrl = urlInput.value.trim();
+
+      if (newUrl) {
+        socket.emit('new-url', newUrl); // Emit new URL to server
+      } else {
+        alert('Please enter a valid video URL.');
+      }
+    });
+
+    // Handle play event
+    videoPlayer.on('play', () => {
+      if (!isRemoteAction) {
+        socket.emit('play', videoPlayer.currentTime());
+      }
+      isRemoteAction = false;
+    });
+
+    // Handle pause event
+    videoPlayer.on('pause', () => {
+      if (!isRemoteAction) {
+        socket.emit('pause', videoPlayer.currentTime());
+      }
+      isRemoteAction = false;
+    });
+
+    // Handle seek event
+    videoPlayer.on('seeked', () => {
+      if (!isRemoteAction) {
+        socket.emit('seek', videoPlayer.currentTime());
+      }
+      isRemoteAction = false;
+    });
+
+    // Handle remote play event
+    socket.on('play', (time) => {
+      if (videoPlayer.paused()) {
+        isRemoteAction = true;
+        videoPlayer.currentTime(time);
+        videoPlayer.play();
+      }
+    });
+
+    // Handle remote pause event
+    socket.on('pause', (time) => {
+      if (!videoPlayer.paused()) {
+        isRemoteAction = true;
+        videoPlayer.currentTime(time);
+        videoPlayer.pause();
+      }
+    });
+
+    // Handle remote seek event
+    socket.on('seek', (time) => {
+      isRemoteAction = true;
+      videoPlayer.currentTime(time);
+    });
+
+    // Handle new video URL from server
+    socket.on('new-url', (url) => {
+      const videoType = getVideoType(url);
+      const currentTime = videoPlayer.currentTime(); // Preserve playback position
+
+      // Update video source
+      videoPlayer.src({ src: url, type: videoType });
+
+      // Reload the video and maintain the previous position if possible
+      videoPlayer.ready(() => {
+        videoPlayer.currentTime(currentTime);
+        videoPlayer.play();
+      });
+    });
+  </script>
+</body>
+</html>
