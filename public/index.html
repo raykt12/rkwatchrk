@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Watch Party - Video.js Player</title>
+  <title>RK Watch Party</title>
 
   <!-- Video.js CSS -->
   <link href="https://vjs.zencdn.net/8.0.4/video-js.css" rel="stylesheet" />
@@ -42,7 +42,7 @@
       color: black;
       font-size: 16px;
       cursor: pointer;
-      border-radius: 5px;
+      border-radius: 10px;
     }
     button:hover {
       background-color: #21a1f1;
@@ -50,8 +50,9 @@
   </style>
 </head>
 <body>
+  <h1>Ray And Kenza Personal Watch Party</h1>
   <input type="text" id="urlInput" placeholder="Enter video URL (mp4, webm, etc.)" />
-  <button id="updateUrlBtn">Update Video URL</button>
+  <button id="updateUrlBtn">Send</button>
 
   <video id="videoPlayer" class="video-js vjs-default-skin" controls preload="auto" data-setup="{}">
     <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4" />
