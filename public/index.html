@@ -61,12 +61,18 @@
     <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4" />
     Your browser does not support HTML5 video.
   </video>
+   <div>
+    <button id="rewindBtn">Rewind 10s</button>
+    <button id="forwardBtn">Forward 10s</button>
+  </div>
 
   <script>
     const socket = io();
     const videoPlayer = videojs('videoPlayer');
     const urlInput = document.getElementById('urlInput');
     const updateUrlBtn = document.getElementById('updateUrlBtn');
+    const rewindBtn = document.getElementById('rewindBtn');
+    const forwardBtn = document.getElementById('forwardBtn');
     let isRemoteAction = false;
 
     // Helper function to get the video type from the URL extension
@@ -131,6 +137,17 @@
         videoPlayer.currentTime(time);
         videoPlayer.pause();
       }
+    });
+
+    // Seek forward and backward by 10 seconds
+    rewindBtn.addEventListener('click', () => {
+      videoPlayer.currentTime(videoPlayer.currentTime() - 10);
+      socket.emit('seek', videoPlayer.currentTime()); // Notify other clients
+    });
+
+    forwardBtn.addEventListener('click', () => {
+      videoPlayer.currentTime(videoPlayer.currentTime() + 10);
+      socket.emit('seek', videoPlayer.currentTime()); // Notify other clients
     });
 
     // Handle remote seek event
